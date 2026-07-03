@@ -185,7 +185,7 @@ npm run tauri dev
 
 ## ⚙️ How it Works
 
-1. **Press and Hold:** Press the global hotkey (default: `Ctrl+Space` or `Cmd+Space`) while focused on any application (VS Code, Chrome, Slack, etc.).
+1. **Press to Toggle:** Press the global hotkey (default: `Ctrl+Space` or `Cmd+Space`) once while focused on any application (VS Code, Chrome, Slack, etc.) to start capturing. Press it again to stop.
 2. **Speak:** FlowLocal captures audio directly from your microphone. A floating overlay will show real-time partial transcription.
 3. **Release:** The audio is sent to the Whisper service.
 4. **Cleanup:** The raw transcript is passed to the LLM service to remove fillers and fix grammar, using context from the active application.
