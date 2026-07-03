@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "flowlocal-llm"
+version = "0.1.0"
+description = "LLM text cleanup service for FlowLocal"
+requires-python = ">=3.11"
+dependencies = [
+    "flowlocal-shared",
+    "httpx>=0.27",
+    "jinja2>=3.1",
+]
+
+[project.scripts]
+flowlocal-llm = "flowlocal_llm.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["flowlocal_llm"]
