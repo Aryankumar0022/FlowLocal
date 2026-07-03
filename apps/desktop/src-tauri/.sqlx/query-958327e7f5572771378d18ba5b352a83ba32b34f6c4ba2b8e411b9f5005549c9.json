@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO history (session_id, event_type, inserted_at, success)\n         VALUES (?, 'dictation', ?, 1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "958327e7f5572771378d18ba5b352a83ba32b34f6c4ba2b8e411b9f5005549c9"
+}

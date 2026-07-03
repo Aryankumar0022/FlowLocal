@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO dictionary (wrong, correct, created_at) VALUES (?, ?, ?)\n         ON CONFLICT(wrong) DO UPDATE SET correct = excluded.correct, created_at = excluded.created_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "b6ae2753907fededbf912c965a8f500bfa94b79fed175ecac2a06617ce6fa58c"
+}

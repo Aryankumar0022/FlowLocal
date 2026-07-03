@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT clean_text FROM sessions WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "clean_text",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2b0cd279da3d90d70544a0e94d6071f8a1d5a3208bad225b46496a7139d13b95"
+}
