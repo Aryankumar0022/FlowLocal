@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { useRecordingStore } from '@/stores/recordingStore';
 import { useHistoryStore } from '@/stores/historyStore';
+import { invoke } from '@tauri-apps/api/core';
 import type {
   RecordingStartEvent,
   TranscriptPartialEvent,
@@ -24,6 +25,17 @@ export function useEvents() {
 
   useEffect(() => {
     const unlisten: Array<Promise<UnlistenFn>> = [];
+
+    // Fetch initial status on mount
+    invoke<{ whisper: boolean; llm: boolean; rag: boolean }>('get_ai_status')
+      .then((status) => {
+        rec.setServices({
+          whisper: status.whisper,
+          llm: status.llm,
+          rag: status.rag,
+        });
+      })
+      .catch(console.error);
 
     // ── recording:start ──────────────────────────────────────
     unlisten.push(

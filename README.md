@@ -1,5 +1,7 @@
 # FlowLocal 🎙️
 
+![FlowLocal Dashboard](assets/dashboard.png)
+
 A production-grade, local-first voice dictation application modeled after Wispr Flow. Everything runs entirely on your local machine using Ollama and Whisper.
 
 **No Cloud APIs. No Telemetry. No Subscriptions.**
