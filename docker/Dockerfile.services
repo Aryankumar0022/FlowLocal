@@ -1,0 +1,57 @@
+# FlowLocal — Multistage Dockerfile for Python microservices
+
+# ──────────────────────────────────────────────────────────
+# Base image: slim Python with torch support
+# ──────────────────────────────────────────────────────────
+FROM python:3.11-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# System dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libsndfile1 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy shared utilities
+COPY shared/ /app/shared/
+RUN pip install -e /app/shared
+
+# ──────────────────────────────────────────────────────────
+# Whisper stage
+# ──────────────────────────────────────────────────────────
+FROM base AS whisper
+
+COPY whisper/ /app/whisper/
+RUN pip install -e /app/whisper
+
+# Whisper: pre-download model during build (optional, for faster startup)
+# ARG WHISPER_MODEL=base
+# RUN python -c "from faster_whisper import WhisperModel; WhisperModel('${WHISPER_MODEL}', device='cpu')"
+
+CMD ["python", "-m", "flowlocal_whisper.main"]
+
+# ──────────────────────────────────────────────────────────
+# LLM stage
+# ──────────────────────────────────────────────────────────
+FROM base AS llm
+
+COPY llm/ /app/llm/
+RUN pip install -e /app/llm
+
+CMD ["python", "-m", "flowlocal_llm.main"]
+
+# ──────────────────────────────────────────────────────────
+# RAG stage
+# ──────────────────────────────────────────────────────────
+FROM base AS rag
+
+COPY rag/ /app/rag/
+RUN pip install -e /app/rag
+
+CMD ["python", "-m", "flowlocal_rag.main"]

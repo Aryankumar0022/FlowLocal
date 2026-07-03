@@ -1,0 +1,107 @@
+# FlowLocal — Docker Compose (Production)
+# Runs the Python AI microservices in containers
+# The Tauri desktop app runs natively on the host.
+
+version: "3.9"
+
+networks:
+  flowlocal:
+    driver: bridge
+
+volumes:
+  chroma_data:
+  model_cache:
+
+services:
+  # ──────────────────────────────────────────────────────
+  # Whisper transcription service
+  # ──────────────────────────────────────────────────────
+  whisper:
+    build:
+      context: ../services
+      dockerfile: ../docker/Dockerfile.services
+      target: whisper
+    container_name: flowlocal-whisper
+    restart: unless-stopped
+    environment:
+      - WHISPER_MODEL=${WHISPER_MODEL:-base}
+      - WHISPER_DEVICE=${WHISPER_DEVICE:-auto}
+      - WHISPER_COMPUTE_TYPE=${WHISPER_COMPUTE_TYPE:-auto}
+      - WHISPER_PIPE=/tmp/flowlocal-whisper.sock
+      - PYTHON_LOG_LEVEL=${PYTHON_LOG_LEVEL:-INFO}
+    volumes:
+      - model_cache:/root/.cache/huggingface
+      - /tmp/flowlocal-whisper.sock:/tmp/flowlocal-whisper.sock
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - flowlocal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('/tmp/flowlocal-whisper.sock')); s.close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ──────────────────────────────────────────────────────
+  # LLM cleanup service
+  # ──────────────────────────────────────────────────────
+  llm:
+    build:
+      context: ../services
+      dockerfile: ../docker/Dockerfile.services
+      target: llm
+    container_name: flowlocal-llm
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_DEFAULT_MODEL:-qwen3:4b}
+      - LLM_SOCKET=/tmp/flowlocal-llm.sock
+      - PYTHON_LOG_LEVEL=${PYTHON_LOG_LEVEL:-INFO}
+    volumes:
+      - /tmp/flowlocal-llm.sock:/tmp/flowlocal-llm.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - flowlocal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('/tmp/flowlocal-llm.sock')); s.close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ──────────────────────────────────────────────────────
+  # RAG / ChromaDB service
+  # ──────────────────────────────────────────────────────
+  rag:
+    build:
+      context: ../services
+      dockerfile: ../docker/Dockerfile.services
+      target: rag
+    container_name: flowlocal-rag
+    restart: unless-stopped
+    environment:
+      - CHROMA_PERSIST_DIR=/data/chroma
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-nomic-embed-text}
+      - RAG_SOCKET=/tmp/flowlocal-rag.sock
+      - PYTHON_LOG_LEVEL=${PYTHON_LOG_LEVEL:-INFO}
+    volumes:
+      - chroma_data:/data/chroma
+      - /tmp/flowlocal-rag.sock:/tmp/flowlocal-rag.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - flowlocal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('/tmp/flowlocal-rag.sock')); s.close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
